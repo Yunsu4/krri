@@ -1,2 +1,2 @@
-# kirri
-kirri projects
+# krri
+krri projects
