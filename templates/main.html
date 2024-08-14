@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Estimated traffic Data{% endblock %}
+
+{% block content %}
+<!-- Content specific to the main page goes here -->
+<style>
+    .container {
+        display: grid;
+        grid-template-columns: repeat(2, auto);
+        grid-template-rows: repeat(2, auto);
+        gap: 20px;
+        height: 100vh;
+        padding-top: -10px;
+        display:none;
+    }
+    .quadrant {
+        border: 1px solid #ccc;
+        padding: 10px;
+        overflow: auto;
+        box-sizing: border-box;
+    }
+    table {
+        width: 100%; /* 테이블이 셀의 너비에 맞게 확장 */
+        border-collapse: collapse; /* 테이블 셀 경계가 겹치지 않게 설정 */
+
+    }
+    th, td {
+        border: 1px solid #ddd; /* 테이블 셀 경계 설정 */
+        padding: 8px; /* 셀의 여백 설정 */
+        text-align: left; /* 텍스트 정렬 설정 */
+    }
+    thead tr th {
+        background-color: #d3d3d3; /* 원하는 색상으로 설정 */
+    }
+    /* 첫 번째 열의 배경색 설정 */
+    tbody tr td:first-child, thead tr th:first-child {
+        background-color: #d3d3d3; /* 원하는 색상으로 설정 */
+    }
+    .form-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        height: auto;
+        margin-bottom: 5px;
+        padding: 20px;
+        margin-top:-8px;
+        margin-bottom:20px;
+    }
+    #dataForm {
+        display: flex;
+        flex-direction: row; 
+        align-items: center;
+        gap: 10px;
+    }
+    .form-row {
+        display: flex;
+        align-items: center;
+        gap: 47px;
+        height: 40px;
+        margin-right: 40px;
+    }
+    #dateGroup {
+        margin-right: 90px;
+    }
+    label {
+        font-size: 1.2em;
+        display: flex;
+        align-items: center;
+    }
+    input[type="text"] {
+        font-size: 0.9em;
+        padding: 0px 10px;
+        width: 130px;
+        height: 40px;
+        box-sizing: border-box;
+        margin-left: -27px;
+        border-radius: 5px; /* 모서리를 둥글게 설정 */
+        border: 1px solid #a3a3a3;
+    }
+    input::placeholder {
+        color: #888;
+    }
+    input:focus::placeholder {
+        color: transparent;
+    }
+    button {
+        font-size: 1em;
+        padding: 0px 10px;
+        height: 42px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        border-radius: 5px; /* 모서리를 둥글게 설정 */
+        border: 1px solid #a3a3a3;
+        cursor : pointer;
+    }
+    .explanation {
+        display: flex;
+        flex-direction: row;
+        gap: 60px;
+        align-items: center;
+        margin-top: -50px;
+    }
+    #buttonContainer {
+        display: flex;
+        padding: 10px;
+        font-size: 14px;
+        cursor: pointer;
+        gap: 7px;
+        margin-left: 20px;
+    }
+    button {
+        margin-top: 10px;
+        cursor : pointer;
+        margin-left: 10px;
+        text-align:center;
+        white-space: pre-wrap;
+        word-break:break-word;
+    }
+    .unavailable {
+        margin-top: 50px;
+        font-size: 2em; /* 원하는 크기로 설정 */
+        font-weight: bold; /* 굵게 설정 (선택사항) */
+    }
+    .container {
+        display: none;
+        grid-template-columns: repeat(2, auto);
+        grid-template-rows: repeat(2, auto);
+        gap: 20px;
+    }
+    .quadrant {
+        border: 1px solid #ccc;
+        padding: 10px;
+        box-sizing: border-box;
+        position: relative; /* 테이블 제목을 절대 위치로 조정할 수 있도록 설정 */
+    }
+
+    .table-header {
+        position: absolute; /* 제목을 절대 위치로 설정 */
+        top: -10px;
+        left: 10px; /* 왼쪽 여백 조정 */
+        right: 10px; /* 오른쪽 여백 조정 */
+        z-index: 1; /* 제목이 테이블 위에 오도록 설정 */
+        padding: 5px; /* 제목의 여백 설정 */
+    }
+
+    .table-container {
+        margin-top: 40px; /* 제목과 테이블 간의 여백 조정 */
+        visibility: visible;
+    }
+
+</style>
+<div class="form-container">
+    <div class="form-container">
+        <form id="dataForm" action="/show_estimated-traffic" method="POST">
+            <div class="form-row" id="dateGroup">
+                <label for="date">Date:</label>
+                <input type="text" id="date" name="date" placeholder="YYYYMMDD" required>
+            </div>
+            <div class="form-row">
+                <label for="time">Time:</label>
+                <input type="text" id="time" name="time" placeholder="HH" required>
+            </div>
+            <button type="submit">조회</button>
+            <div id="buttonContainer"></div>
+        </form>    
+    </div>
+    <div class="explanation">
+        <div class="current-date" id="currentDate"></div>
+        <p id="availabiltyTimeElement">조회 가능 시간: 05시 ~ 23시</p>
+    </div>
+</div>
+<!--
+<div class="container">
+    <div id="quadrant1" class="quadrant"></div>
+    <div id="quadrant2" class="quadrant"></div>
+    <div id="quadrant3" class="quadrant"></div>
+    <div id="quadrant4" class="quadrant"></div>
+</div>
+    -->
+<div class="container">
+    <div id="quadrant1" class="quadrant">
+        <div class="table-header">
+            <h3>승하차 인원</h3>
+        </div>
+        <div id="tableContainer1" class="table-container"></div>
+    </div>
+    <div id="quadrant2" class="quadrant">
+        <div class="table-header">
+            <h3>출발 통행</h3>
+        </div>
+        <div id="tableContainer2" class="table-container"></div>
+    </div>
+    <div id="quadrant3" class="quadrant">
+        <div class="table-header">
+            <h3>도착 통행</h3>
+        </div>
+        <div id="tableContainer3" class="table-container"></div>
+    </div>
+    <div id="quadrant4" class="quadrant">
+        <div class="table-header">
+            <h3>환승 통행</h3>
+        </div>
+        <div id="tableContainer4" class="table-container"></div>
+    </div>
+</div>
+    
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+{% endblock %}
