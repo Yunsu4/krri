@@ -1,18 +1,23 @@
-from flask import Flask, request, jsonify, render_template
-import waitress
+from flask import Flask, request, jsonify, send_file, render_template
 import pandas as pd
-import numpy as np
+from datetime import datetime, timedelta
 from controller import R1
 from controller import R2
 from controller import congestionRatioController
 from controller import R4
 from controller import R5
+from controller import odmatrix_data_processing
+from controller import sk_data_processing
+from io import BytesIO
 from model.Line1_4_riders_ratio import Line1_month_riders_ratio, Line4_month_riders_ratio
 from model.exitHeadCount import forRawDataExitHeadCount_data
 from model.carHeadCount import forRawData_carHeadCount_Line1, forRawData_carHeadCount_Line4
 from model.congestionRatio import forRawData_congestionRatio_Line1, forRawData_congestionRatio_Line4
 from controller.congestionRatioController import custom_weekday
 import warnings
+import zipfile
+
+
 
 # FutureWarning 무시
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -175,5 +180,114 @@ def show_skData():
 
 
 
+
+
+@app.route('/download_estimated-traffic', methods=['GET'])
+def download_estimated_traffic():
+
+  # 조회할 수 있는 날짜 중 가장 첫 날을 조회
+    current_datetime = datetime.now() # 오늘 날짜와 시간을 datetime 객체로 변환
+    new_datetime = current_datetime - timedelta(days=29) # 날짜를 29일 전으로 변경
+    date = new_datetime.strftime("%Y%m%d")
+
+
+    # 최종 zip 파일을 메모리에 생성
+    final_zip_buffer = BytesIO()
+    with zipfile.ZipFile(final_zip_buffer, 'w', zipfile.ZIP_DEFLATED) as final_zip_file:
+
+        for hour in range(5,24): # 05 ~ 23시까지 time으로 입력
+            time = f"{hour:02d}"
+
+
+            # od_matrix와 동일
+            final_R1 = R1.R1_controller(date, time)
+            final_R2 = R2.R2_controller(final_R1)
+            cR = congestionRatioController.congestionRatio_controller(date, time)
+            final_R4 = R4.R4_controller(date, time, final_R1, cR)
+            final_R5 = R5.R5_controller(cR, date, time)
+
+
+            # 각 시간대의 데이터를 처리하여 zip 파일 생성
+            time_zip_buffer = odmatrix_data_processing.process_data_and_generate_csvs(final_R1, final_R2, final_R4, final_R5, date, time)
+
+            
+            time_zip_filename=f"TrafficData_{date}{time}.zip" # zip 파일 이름 설정
+            time_zip_buffer.seek(0) # 각 시간대 zip 파일의 포인터를 맨 처음으로 이동
+
+            # 최종 zip 파일에 각 시간의 zip 파일을 저장
+            final_zip_file.writestr(time_zip_filename, time_zip_buffer.read()) 
+
+    # 최종 zip 파일의 포인터를 맨 처음으로 이동
+    final_zip_buffer.seek(0)
+
+
+    # 최종 zip 파일을 "Day_TrafficData_{date}.zip" 이라는 이름으로 반환
+    return send_file(
+        final_zip_buffer,
+        as_attachment=True,
+        download_name=f"Day_TrafficData_{date}.zip",
+        mimetype='application/zip'
+    )
+
+
+
+
+
+@app.route('/download_SK-data', methods=['GET'])
+def download_skData():
+
+  # 조회할 수 있는 날짜 중 가장 첫 날을 조회
+    current_datetime = datetime.now() # 오늘 날짜와 시간을 datetime 객체로 변환
+    new_datetime = current_datetime - timedelta(days=29) # 날짜를 29일 전으로 변경
+    date = new_datetime.strftime("%Y%m%d")
+
+    dow=custom_weekday(date) #날짜를 통해 요일을 구하여 dow에 저장
+
+    # 최종 zip 파일을 메모리에 생성
+    final_zip_buffer = BytesIO()
+    with zipfile.ZipFile(final_zip_buffer, 'w', zipfile.ZIP_DEFLATED) as final_zip_file:
+
+        for hour in range(5,24): # 05 ~ 23시까지 time으로 입력
+            time = f"{hour:02d}"
+
+
+            # show_skData와 동일
+            exitData = forRawDataExitHeadCount_data(date, time)
+            carHeadCount_1= forRawData_carHeadCount_Line1(dow,time)
+            carHeadCount_4= forRawData_carHeadCount_Line4(dow,time)
+            congestionRatio_1 =forRawData_congestionRatio_Line1(dow, time)
+            congestionRatio_4 =forRawData_congestionRatio_Line4(dow, time)
+
+
+            # 각 시간대의 데이터를 처리하여 zip 파일 생성
+            time_zip_buffer = sk_data_processing.process_data_and_generate_csvs(exitData, carHeadCount_1, carHeadCount_4, congestionRatio_1, congestionRatio_4, date, time)
+
+            
+            time_zip_filename=f"skData_{date}{time}.zip" # zip 파일 이름 설정
+            time_zip_buffer.seek(0) # 각 시간대 zip 파일의 포인터를 맨 처음으로 이동
+
+            # 최종 zip 파일에 각 시간의 zip 파일을 저장
+            final_zip_file.writestr(time_zip_filename, time_zip_buffer.read()) 
+
+    # 최종 zip 파일의 포인터를 맨 처음으로 이동
+    final_zip_buffer.seek(0)
+
+
+    # 최종 zip 파일을 "Day_skData_{date}.zip" 이라는 이름으로 반환
+    return send_file(
+        final_zip_buffer,
+        as_attachment=True,
+        download_name=f"Day_skData_{date}.zip",
+        mimetype='application/zip'
+    )
+
+
+
+
+
+
+
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000,debug=True)

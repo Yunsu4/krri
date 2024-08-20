@@ -153,11 +153,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 table += '<tbody>';
                 data.forEach(row => {
                     table += '<tr>';
-                    keys.forEach(key => {
-                        if(row[key] !== 'number')
-                            row[key]= parseFloat(row[key])
-                        table += `<td>${row[key] === 0 ? 0 :
-                            (row[key] === null ? 0 : (Math.round(row[key] * 1000) / 1000).toFixed(2))}</td>`;
+                    keys.forEach((key, index) => {
+                        if(index === 0){
+                            table += `<td>${parseInt(row[key])}</td>`;
+                        }else{
+                            if(row[key] !== 'number')
+                                row[key]= parseFloat(row[key])
+                                table += `<td>${row[key] === 0 ? 0 :
+                                (row[key] === null ? 0 : (Math.round(row[key] * 1000) / 1000).toFixed(2))}</td>`;
+                        }
                     });
                     table += '</tr>';
                 });
@@ -188,8 +192,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 ];
                 const baseFileNames = [
                     'PassengerCount',
-                    'DestinationTraffic',
-                    'ArricalTraffic',
+                    'DepartureTraffic',
+                    'ArrivalTraffic',
                     'TransferTraffic'
 
                 ];
@@ -201,7 +205,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 button.addEventListener('click', () => {
                     const table = document.querySelector(selector + ' table');
                     const csvContent = generateCSVFromTable(table);
-                    //downloadCSV(csvContent, downladCSVLabels[index] || `quadrant_${index + 1}.csv`);
+
+
                     downloadCSV(csvContent, downloadCSVFileName || `quadrant_${index + 1}.csv`);
                 });
                 buttonContainer.appendChild(button);
@@ -224,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function() {
             return csv.join('\n');
         }
 
-         function downloadCSV(csvContent, filename) {
+        function downloadCSV(csvContent, filename) {
             const BOM = "\uFEFF";
             csvContent = BOM+csvContent
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -240,6 +245,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 window.URL.revokeObjectURL(url);
             }
         }
+
+        
         
     });
 });
