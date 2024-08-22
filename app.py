@@ -16,6 +16,7 @@ from model.congestionRatio import forRawData_congestionRatio_Line1, forRawData_c
 from controller.congestionRatioController import custom_weekday
 import warnings
 import subprocess
+import zipfile
 
 
 
@@ -285,7 +286,7 @@ def download_skData():
 
 def run_upload_csv():
     try:
-        subprocess.Popen([["python", "upload_csv.py"]])
+        subprocess.Popen(["python", "upload_csv.py"])
         print("upload_csv.py script started successfully.")
     except Exception as e:
         print(f"Failed to start upload_csv.py: {e}")
