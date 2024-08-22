@@ -5,7 +5,9 @@ import pandas as pd
 # 1, 4호선 승하차 인원 비율
 def riders_ratio(date):
 
-    S1 = pd.read_csv('C:/Users/LG/Desktop/kirri/OdMatrix_code/S1.csv', encoding='cp949') # S1.csv 읽어오기
+    # S1 = pd.read_csv('C:/Users/LG/Desktop/kirri/OdMatrix_code/S1.csv', encoding='cp949') # S1.csv 읽어오기 절대경로
+
+    S1 = pd.read_csv('S1.csv', encoding='cp949') # S1.csv 읽어오기
 
     year_month=date[:6] # 연월만 추출
 
@@ -80,7 +82,7 @@ def riders_ratio(date):
 
 # 한 달 동안 1호선 승하차 인원 정보(S1 raw data)
 def Line1_month_riders_ratio(date):
-    S1 = pd.read_csv('C:/Users/LG/Desktop/kirri/OdMatrix_code/S1.csv', encoding='cp949') # S1.csv 읽어오기
+    S1 = pd.read_csv('S1.csv', encoding='cp949') # S1.csv 읽어오기
 
     year_month=date[:6] # 연월만 추출
 
@@ -93,7 +95,7 @@ def Line1_month_riders_ratio(date):
 
 # 한 달 동안 4호선 승하차 인원 정보(S1 raw data)
 def Line4_month_riders_ratio(date):
-    S1 = pd.read_csv('C:/Users/LG/Desktop/kirri/OdMatrix_code/S1.csv', encoding='cp949') # S1.csv 읽어오기
+    S1 = pd.read_csv('S1.csv', encoding='cp949') # S1.csv 읽어오기
 
     year_month=date[:6] # 연월만 추출
 
@@ -114,7 +116,7 @@ def Line4_month_riders_ratio(date):
 # 1호선 시간대별 환승인원
 def Line1_transfer(date, dow):
 
-    S1 = pd.read_csv('C:/Users/LG/Desktop/kirri/OdMatrix_code/S1.csv', encoding='cp949') # S1.csv 읽어오기
+    S1 = pd.read_csv('S1.csv', encoding='cp949') # S1.csv 읽어오기
 
     year_month=date[:6] # 연월만 추출
 
@@ -153,7 +155,7 @@ def Line1_transfer(date, dow):
 # 4호선 시간대별 환승인원
 def Line4_transfer(date, dow):
 
-    S1 = pd.read_csv('C:/Users/LG/Desktop/kirri/OdMatrix_code/S1.csv', encoding='cp949') # S1.csv 읽어오기
+    S1 = pd.read_csv('S1.csv', encoding='cp949') # S1.csv 읽어오기
 
     year_month=date[:6] # 연월만 추출
 
@@ -258,7 +260,7 @@ def calculate_time_period_riders_ratio(seoulStation):
 # 1,4호선 승차 인원 비율을 구하는 함수 (list 형태로 반환)
 def Line14_getOn_ratio(year_month):
 
-    S1 = pd.read_csv('C:/Users/LG/Desktop/kirri/OdMatrix_code/S1.csv', encoding='cp949') # S1.csv 읽어오기
+    S1 = pd.read_csv('S1.csv', encoding='cp949') # S1.csv 읽어오기
 
 
 

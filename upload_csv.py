@@ -5,7 +5,10 @@ import re
 
 
 def upload_to_s3(file_obj, bucket_name, s3_filename):
-    s3= boto3.client('s3', region_name='ap-northeast-2')
+    s3 = boto3.client(
+            service_name ="s3",
+            region_name= "ap-northeast-2"
+        )
     try:
         s3.upload_fileobj(file_obj, bucket_name, s3_filename)
         print(f"File has been uploaded to {bucket_name}/{s3_filename}")

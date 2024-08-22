@@ -15,7 +15,7 @@ from model.carHeadCount import forRawData_carHeadCount_Line1, forRawData_carHead
 from model.congestionRatio import forRawData_congestionRatio_Line1, forRawData_congestionRatio_Line4
 from controller.congestionRatioController import custom_weekday
 import warnings
-import zipfile
+import subprocess
 
 
 
@@ -283,11 +283,17 @@ def download_skData():
 
 
 
-
+def run_upload_csv():
+    try:
+        subprocess.Popen([["python", "upload_csv.py"]])
+        print("upload_csv.py script started successfully.")
+    except Exception as e:
+        print(f"Failed to start upload_csv.py: {e}")
 
 
 
 
 
 if __name__ == '__main__':
+    run_upload_csv()
     app.run(host="0.0.0.0", port=5000,debug=True)
