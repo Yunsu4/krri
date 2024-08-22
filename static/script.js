@@ -155,7 +155,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     table += '<tr>';
                     keys.forEach((key, index) => {
                         if(index === 0){
-                            table += `<td>${parseInt(row[key])}</td>`;
+                            table += `<td>${row[key] || ''}</td>`;
                         }else{
                             if(row[key] !== 'number')
                                 row[key]= parseFloat(row[key])
