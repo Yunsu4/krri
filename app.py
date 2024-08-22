@@ -17,6 +17,7 @@ from controller.congestionRatioController import custom_weekday
 import warnings
 import subprocess
 import zipfile
+import upload_csv
 
 
 
@@ -183,7 +184,7 @@ def show_skData():
 
 
 
-@app.route('/download_estimated-traffic', methods=['GET'])
+"""@app.route('/download_estimated-traffic', methods=['GET'])
 def download_estimated_traffic():
 
   # 조회할 수 있는 날짜 중 가장 첫 날을 조회
@@ -228,13 +229,13 @@ def download_estimated_traffic():
         as_attachment=True,
         download_name=f"Day_TrafficData_{date}.zip",
         mimetype='application/zip'
-    )
+    )"""
 
 
 
 
 
-@app.route('/download_SK-data', methods=['GET'])
+"""@app.route('/download_SK-data', methods=['GET'])
 def download_skData():
 
   # 조회할 수 있는 날짜 중 가장 첫 날을 조회
@@ -280,21 +281,124 @@ def download_skData():
         as_attachment=True,
         download_name=f"Day_skData_{date}.zip",
         mimetype='application/zip'
-    )
+    )"""
 
 
 
-def run_upload_csv():
+
+
+
+
+@app.route('/download_estimated-traffic', methods=['GET'])
+def download_estimated_traffic():
     try:
-        subprocess.Popen(["python", "upload_csv.py"])
-        print("upload_csv.py script started successfully.")
+
+    # 조회할 수 있는 날짜 중 가장 첫 날을 조회
+        current_datetime = datetime.now() # 오늘 날짜와 시간을 datetime 객체로 변환
+        new_datetime = current_datetime - timedelta(days=29) # 날짜를 29일 전으로 변경
+        date = new_datetime.strftime("%Y%m%d")
+
+
+        # 최종 zip 파일을 메모리에 생성
+        final_zip_buffer = BytesIO()
+        with zipfile.ZipFile(final_zip_buffer, 'w', zipfile.ZIP_DEFLATED) as final_zip_file:
+
+            for hour in range(5,24): # 05 ~ 23시까지 time으로 입력
+                time = f"{hour:02d}"
+
+
+                # od_matrix와 동일
+                final_R1 = R1.R1_controller(date, time)
+                final_R2 = R2.R2_controller(final_R1)
+                cR = congestionRatioController.congestionRatio_controller(date, time)
+                final_R4 = R4.R4_controller(date, time, final_R1, cR)
+                final_R5 = R5.R5_controller(cR, date, time)
+
+
+                # 각 시간대의 데이터를 처리하여 zip 파일 생성
+                time_zip_buffer = odmatrix_data_processing.process_data_and_generate_csvs(final_R1, final_R2, final_R4, final_R5, date, time)
+
+                
+                time_zip_filename=f"TrafficData_{date}{time}.zip" # zip 파일 이름 설정
+                time_zip_buffer.seek(0) # 각 시간대 zip 파일의 포인터를 맨 처음으로 이동
+                final_zip_file.writestr(time_zip_filename, time_zip_buffer.read()) # 최종 zip 파일에 각 시간의 zip 파일을 저장
+
+        # 최종 zip 파일의 포인터를 맨 처음으로 이동
+        final_zip_buffer.seek(0)
+
+
+        bucket_name = "odmatrix"
+        s3_filename= f"Day_TrafficData_{date}.zip"
+        upload_csv.upload_to_s3(final_zip_buffer, bucket_name, s3_filename)
+
+
+
+        # 클라이언트에게 파일 전송
+        return jsonify({"message":"sucess"})
+
     except Exception as e:
-        print(f"Failed to start upload_csv.py: {e}")
+        print(f"Error during processing: {e}")
+        return jsonify({"error": "Failed to process request"}), 500
+
+
+
+
+
+@app.route('/download_SK-data', methods=['GET'])
+def download_skData():
+    try:
+
+    # 조회할 수 있는 날짜 중 가장 첫 날을 조회
+        current_datetime = datetime.now() # 오늘 날짜와 시간을 datetime 객체로 변환
+        new_datetime = current_datetime - timedelta(days=29) # 날짜를 29일 전으로 변경
+        date = new_datetime.strftime("%Y%m%d")
+
+        dow=custom_weekday(date) #날짜를 통해 요일을 구하여 dow에 저장
+
+        # 최종 zip 파일을 메모리에 생성
+        final_zip_buffer = BytesIO()
+        with zipfile.ZipFile(final_zip_buffer, 'w', zipfile.ZIP_DEFLATED) as final_zip_file:
+
+            for hour in range(5,24): # 05 ~ 23시까지 time으로 입력
+                time = f"{hour:02d}"
+
+
+                # show_skData와 동일
+                exitData = forRawDataExitHeadCount_data(date, time)
+                carHeadCount_1= forRawData_carHeadCount_Line1(dow,time)
+                carHeadCount_4= forRawData_carHeadCount_Line4(dow,time)
+                congestionRatio_1 =forRawData_congestionRatio_Line1(dow, time)
+                congestionRatio_4 =forRawData_congestionRatio_Line4(dow, time)
+
+
+                # 각 시간대의 데이터를 처리하여 zip 파일 생성
+                time_zip_buffer = sk_data_processing.process_data_and_generate_csvs(exitData, carHeadCount_1, carHeadCount_4, congestionRatio_1, congestionRatio_4, date, time)
+
+                
+                time_zip_filename=f"skData_{date}{time}.zip" # zip 파일 이름 설정
+                time_zip_buffer.seek(0) # 각 시간대 zip 파일의 포인터를 맨 처음으로 이동
+                final_zip_file.writestr(time_zip_filename, time_zip_buffer.read()) # 최종 zip 파일에 각 시간의 zip 파일을 저장
+
+        # 최종 zip 파일의 포인터를 맨 처음으로 이동
+        final_zip_buffer.seek(0)
+
+        bucket_name = "odmatrix"
+        s3_filename= f"Day_skData_{date}.zip"
+        upload_csv.upload_to_s3(final_zip_buffer, bucket_name, s3_filename)
+
+
+
+        # 클라이언트에게 파일 전송
+        return jsonify({"message":"sucess"})
+
+    except Exception as e:
+        print(f"Error during processing: {e}")
+        return jsonify({"error": "Failed to process request"}), 500
+
 
 
 
 
 
 if __name__ == '__main__':
-    run_upload_csv()
     app.run(host="0.0.0.0", port=5000,debug=True)

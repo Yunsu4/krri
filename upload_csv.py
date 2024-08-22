@@ -19,67 +19,28 @@ def upload_to_s3(file_obj, bucket_name, s3_filename):
 
 
 
-'''
-def process_endpoint(url, bucket_name):
 
+"""def process_endpoint(url, bucket_name, default_filename):
     try:
-        # 엔드포인트에서 데이터 다운로드 (메모리에서 직접 처리)
-        response = requests.get(url, stream=True)
-        response.raise_for_status() # 요청 실패시 예외 발생
+        print(f"Downloading from {url}")
+        # 엔드포인트에서 데이터 다운로드 (스트리밍 방식으로 직접 처리)
+        with requests.get(url, stream=True, timeout=60) as response:
+            response.raise_for_status()  # 요청 실패 시 예외 발생
+            print("Download completed")
 
-        content_disposition = response.headers.get('Content-Disposition')
-        if content_disposition:
-            filename_match =re.findall('filename="(.+)"', content_disposition)
-            if filename_match:
-                s3_filename = filename_match[0]
-            else:
-                raise ValueError("Filename not found in Content-Disposition header")
-        else:
-            raise ValueError("Content-Disposition header not found in response")
-        
-        # 데이터가 담긴 스트림을 S3에 직접 업로드
-        file_obj = BytesIO(response.content)
-        upload_to_s3(file_obj, bucket_name, s3_filename)
+            
+            s3_filename = default_filename
+            
+            print(f"Uploading {s3_filename} to S3")
+            # 데이터를 메모리에 저장하지 않고 바로 S3로 스트리밍
+            file_obj = BytesIO()
+            for chunk in response.iter_content(chunk_size=8192):
+                file_obj.write(chunk)
+            file_obj.seek(0)  # 파일 포인터를 처음으로 이동
 
-    except Exception as e:
-        print(f"Error during download or upload: {e}")
-
-
-
-def main():
-    bucket_name= "odmatrix"
-
-
-    urls = [
-        "http://3.35.146.53:5000/download_estimated-traffic",  # 첫 번째 엔드포인트
-        "http://3.35.146.53:5000/download_SK-data"             # 두 번째 엔드포인트 (수정 필요)
-    ]
-
-
-    for url in urls:
-        process_endpoint(url, bucket_name)
-
-'''
-
-def process_endpoint(url, bucket_name, default_filename):
-    try:
-        # 엔드포인트에서 데이터 다운로드 (메모리에서 직접 처리)
-        response = requests.get(url, stream=True)
-        response.raise_for_status()  # 요청 실패시 예외 발생
-
-        content_disposition = response.headers.get('Content-Disposition')
-        if content_disposition:
-            filename_match = re.findall('filename="(.+)"', content_disposition)
-            if filename_match:
-                s3_filename = filename_match[0]
-            else:
-                s3_filename = default_filename  
-        else:
-            s3_filename = default_filename  
-
-        # 데이터가 담긴 스트림을 S3에 직접 업로드
-        file_obj = BytesIO(response.content)
-        upload_to_s3(file_obj, bucket_name, s3_filename)
+            # S3에 업로드
+            upload_to_s3(file_obj, bucket_name, s3_filename)
+            print(f"Upload completed for {s3_filename}")
 
     except Exception as e:
         print(f"Error during download or upload: {e}")
@@ -90,7 +51,8 @@ def main():
     # default_filename을 웹에서 사용하는 download_name과 동일하게 설정
     urls = [
         ("http://3.35.146.53:5000/download_estimated-traffic", "Day_TrafficData_<date>.zip"),
-        ("http://3.35.146.53:5000/download_SK-data", "Day_skData_<date>.zip")
+        ("http://3.35.146.53:5000/download_SK-data", "Day_skData_<date>.zip"),
+        ("http://3.35.146.53:5000/download_estimated-traffic1", "Day_TrafficData_<date>.zip")
     ]
 
     for url, default_filename in urls:
@@ -103,4 +65,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main()"""
