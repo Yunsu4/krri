@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Public Data{% endblock %}
+
+{% block content %}
+<!-- Content specific to the main page goes here -->
+<style>
+    table {
+        width: 100%; /* 테이블이 셀의 너비에 맞게 확장 */
+        border-collapse: collapse; /* 테이블 셀 경계가 겹치지 않게 설정 */
+
+    }
+    th, td {
+        border: 1px solid #ddd; /* 테이블 셀 경계 설정 */
+        padding: 8px; /* 셀의 여백 설정 */
+        text-align: left; /* 텍스트 정렬 설정 */
+    }
+    thead tr th {
+        background-color: #d3d3d3; /* 원하는 색상으로 설정 */
+    }
+    tr th {
+        background-color: #d3d3d3; /* 원하는 색상으로 설정 */
+
+    }
+    .form-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        height: auto;
+        margin-bottom: 5px;
+        padding: 20px;
+        margin-top: -8px; /* 상단 여백 조정 */
+        margin-bottom: 20px;
+        
+    }
+    #dataForm {
+        display: flex;
+        flex-direction: row; 
+        align-items: center;
+        gap: 10px;
+    }
+    .form-row {
+        display: flex;
+        align-items: center;
+        gap: 47px;
+        height: 40px;
+        margin-right: 40px;
+    }
+    #monthGroup, #dowGroup, #timeGroup {
+        margin-right: 90px;
+    }
+    label {
+        font-size: 1.2em;
+        display: flex;
+        align-items: center;
+    }
+    input[type="text"] {
+        font-size: 0.9em;
+        padding: 0px 10px;
+        width: 130px;
+        height: 40px;
+        box-sizing: border-box;
+        margin-left: -27px;
+        border-radius: 5px; /* 모서리를 둥글게 설정 */
+        border: 1px solid #a3a3a3;
+    }
+    input::placeholder {
+        color: #888;
+    }
+    input:focus::placeholder {
+        color: transparent;
+    }
+    button {
+        font-size: 1em;
+        padding: 0px 10px;
+        height: 42px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        border-radius: 5px; /* 모서리를 둥글게 설정 */
+        border: 1px solid #a3a3a3;
+        cursor: pointer;
+    }
+    .ex_container{
+        display: flex;
+    }
+    .explanation {
+        font-size: 16px;
+        display: flex;
+        flex-direction: row;
+        margin-top: -10px;
+        
+    }
+    .explanation2 {
+        font-size: 16px;
+        display: flex;
+        flex-direction: row;
+        margin-top: -10px;
+        margin-left:100px;
+        gap: 160px;
+    }
+
+    #buttonContainer {
+        display: flex;
+        padding: 10px;
+        font-size: 14px;
+        cursor: pointer;
+        gap: 7px;
+        margin-left: 20px;
+    }
+    button {
+        font-size: 1em;
+        padding: 0px 10px;
+        height: 42px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        border-radius: 5px; /* 모서리를 둥글게 설정 */
+        border: 1px solid #a3a3a3;
+        cursor : pointer;
+    }
+    
+    #buttonContainer {
+        display: flex;
+        padding: 10px;
+        font-size: 14px;
+        cursor: pointer;
+        gap: 30px;
+        margin-left: 20px;
+    }
+    button {
+        margin-top: 10px;
+        cursor : pointer;
+        margin-left: 10px;
+        text-align: center;
+        white-space: pre-wrap;
+        word-break:break-word;
+    }
+    .table-container {
+    margin-bottom: 50px; /* 테이블 사이의 여백 추가 */
+    }
+    .hidden {
+        display: none;
+    }
+    h2{
+    margin-left:10px;
+    margin-bottom:10px;
+    }
+</style>
+<div class="form-container">
+    <div class="form-container">
+        <form id="dataForm" action="/show_public-data" method="POST">
+            <div class="form-row" id="monthGroup">
+                <label for="month">Month:</label>
+                <input type="text" id="month" name="month" placeholder="MM" required>
+            </div>
+            <div class="form-row" id="dowGroup">
+                <label for="dow">Day of Week:</label>
+                <input type="text" id="dow" name="dow" placeholder="MON" required>
+            </div>
+            <div class="form-row" id="timeGroup">
+                <label for="time">Time:</label>
+                <input type="text" id="time" name="time" placeholder="HH" required>
+            </div>
+            <button type="submit">조회</button>
+            <div id="buttonContainer"></div>
+        </form>
+        <div class ="ex_container">
+            <div class="explanation">
+                <div class="current-date" id="currentDate"></div>
+                <p id="availabiltyMonthElement">조회 가능 범위: 01월 ~ 12월</p>
+            </div>
+            <div class="explanation2">
+                <p id ="availabiltyDowElement">월요일(MON) ~ 일요일(SUN)</p>
+                <p id ="availabiltyMonthElement">05시 ~ 23시</p>
+            </div> 
+        </div>
+    </div>
+    <div class="explanation">
+        <div class="current-date" id="currentDate"></div>
+    </div>
+</div>
+<div class="content">
+    <h2 id="heading1" class="hidden">1호선 승차차 인원</h2>
+    <div id="tableContainer1" class="table-container"></div>
+</div>
+<div class="content">
+    <h2 id="heading2" class="hidden">4호선 승차차 인원</h2>
+    <div id="tableContainer2" class="table-container"></div>
+</div>
+<h2>일일 환승 인원</h2>
+<table>
+    <tr>
+        <th scope ="col">역명</th>
+        <th scope ="col">평일(일평균)</th>
+        <th scope ="col">토요일</th>
+        <th scope ="col">일요일</th>
+    </tr>
+    <tr>
+        <td>서울역</td>
+        <td>144533</td>
+        <td>125109</td>
+        <td>95080</td>
+    </tr>
+</table>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{{ url_for('static', filename='publicData_script.js') }}"></script>
+{% endblock %}

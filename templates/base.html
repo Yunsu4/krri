@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Seoul Station O-D Matrix{% endblock %}</title>
+    
+    <style>
+        @font-face {
+            font-family:'nexon';
+            src: url("{{ url_for('static', filename='fonts/LeferiBaseBold.otf') }}") format('opentype');
+        }
+        body {
+            margin: 0;
+            padding-top: 60px; /* 네비게이션 바 높이 만큼 패딩 추가 */
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            
+            background-color: white;
+            color: white;
+            padding: 8px 12px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 2px solid #ccc; /* 여기서 네비게이션 바의 줄 설정 */
+        }
+        .navbar__logo{
+            display: flex;
+            align-items: center;
+        }
+        .navbar__logo img {
+            height: 30px;
+            margin-right: 10px;
+        }
+        .navbar__logo a {
+            font-size: 1.8em;
+            color: black;
+            text-decoration: none;
+            line-height: 50px;
+            margin-left: 10px ;
+            font-family: 'nexon';
+        }
+        a {
+            text-decoration: none;
+            color: black;
+            display: block;
+        }
+        .navbar__menu {
+            list-style: none;
+            display: flex;
+            margin: 0;
+            padding-left: 300px;
+        }
+        .navbar__menu li {
+            padding: 8px 30px;
+            position: relative;
+        }
+        .navbar__menu li.active ::after {
+            
+            content: '';
+            display: block;
+            position: absolute;
+            bottom: -14px; /* 텍스트와 줄 사이의 여백 조정 */
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: black;
+            /*border-bottom: 3px solid black; /* 줄 추가 */
+        }
+        .navbar__right {
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class = "navbar__logo">
+            <a href="/">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
+            </a>
+            <a href="/">서울역 O-D Matrix</a>
+        </div>
+        <ul class="navbar__menu">
+            <li data-path="/estimated-traffic"><a href="/estimated-traffic">Estimated traffic DATA</a></li>
+            <li data-path="/public-data"><a href="/public-data">RAW DATA (public)</a></li>
+            <li data-path="/SK-data"><a href="/SK-data">RAW DATA (SK)</a></li>
+        </ul>        
+        <div class="navbar__right">
+            <ul class="navbar__menu">
+                <li data-path="/about"><a href="/about">About</a></li>
+            </ul>
+        </div>
+    </nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+
+            // 페이지 로드 시, 로컬 저장소에서 활성화된 메뉴 항목을 확인하고 적용합니다.
+            const menuItems = document.querySelectorAll('.navbar__menu li');
+            menuItems.forEach(function(menuItem){
+                const path = menuItem.getAttribute('data-path');
+                if(currentPath === path){
+                    menuItem.classList.add('active');
+                }else{
+                    menuItem.classList.remove('active');
+                }
+            
+
+            });
+            
+                // 로고 클릭 시 활성화된 상태 제거
+                document.getElementById('logo').addEventListener('click', function() {
+                    menuItems.forEach(function(menuItem) {
+                        menuItem.classList.remove('active');
+                    });
+                });
+                
+                document.getElementById('home-link').addEventListener('click', function() {
+                    menuItems.forEach(function(menuItem) {
+                        menuItem.classList.remove('active');
+                    });
+                });
+
+        });
+
+
+    </script>
+    
+    {% block content %}{% endblock %}
+    
+</body>
+</html>
