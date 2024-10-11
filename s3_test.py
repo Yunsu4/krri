@@ -7,8 +7,8 @@ def s3_connection():
         s3 = boto3.client(
             service_name ="s3",
             region_name= "ap-northeast-2",
-            aws_access_key_id="AKIAQWHCPWQYQYSKKJPK",
-            aws_secret_access_key="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",
+            aws_access_key_id="[[access_id]]",
+            aws_secret_access_key="[[access_key]]",
         )
     except Exception as e:
         print(e)
